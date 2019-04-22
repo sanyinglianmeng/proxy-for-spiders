@@ -37,5 +37,5 @@ addons = [
 
 if __name__ == '__main__':
     # run_server(8893)
-    # run_maintainer()
-    run_https_server(8893)
+    run_maintainer()
+    # run_https_server(8893)

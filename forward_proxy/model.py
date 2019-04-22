@@ -1,6 +1,5 @@
 import re
 import ast
-from collections import Counter
 from functools import total_ordering
 
 import furl
@@ -13,46 +12,30 @@ from config import config
 
 class Response(object):
 
-    def __init__(self, create_time=None, status=None, url=None, html=None, is_valid=None, info=None):
+    def __init__(self, create_time=None, status_code=None, url=None, text=None, is_valid=None, info=None):
         if info is not None:
-            create_time, url, status, is_valid, html = info.split('$$', maxsplit=4)
+            create_time, url, status_code, is_valid, text = info.split('$$', maxsplit=4)
         self.is_valid = ast.literal_eval(str(is_valid))
-        self.create_time = int(str(create_time).split('.')[0])
-        self.status = status
+        self.status_code = status_code
         self.url = url
-        self.html = html
+        self.text = text
+        self.create_time = int(str(create_time).split('.')[0]) if create_time else None
 
     def __str__(self):
-        return '{url} {status} {html}'.format(url=self.url, status=self.status, html=str(self.html)[:200])
+        return '{url} {status} {html}'.format(url=self.url, status=self.status_code, html=str(self.text)[:200])
 
 
-@total_ordering
-class Proxy(object):
+class RedisModel(object):
 
-    def __init__(self, ip, port, **kwargs):
-        self.ip = ip
-        self.port = int(port)
+    def __init__(self, **kwargs):
         if 'redis_conn' in kwargs and kwargs['redis_conn'] is not None:
             self._redis_conn = kwargs['redis_conn']
         else:
             self._redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT,
                                                  db=config.REDIS_DB, decode_responses=True)
 
-    def __str__(self):
-        return '{0}:{1}'.format(self.ip, self.port)
 
-    def __eq__(self, other):
-        return self.success_rate == other.success_rate
-
-    def __gt__(self, other):
-        return self.success_rate > other.success_rate
-
-    @classmethod
-    def parse(cls, proxy, **kwargs):
-        if proxy.startswith('http'):
-            proxy = re.sub(r'https?://', '', proxy, 1)
-        ip, port = proxy.split(':')
-        return Proxy(ip, port, redis_conn=kwargs.get('redis_conn', None))
+class StatisticsMixin(object):
 
     @property
     def success_rate(self):
@@ -75,14 +58,35 @@ class Proxy(object):
             yield Response(info=info)
 
 
-class ProxyManager(object):
+@total_ordering
+class Proxy(StatisticsMixin, RedisModel):
+
+    def __init__(self, ip, port, **kwargs):
+        super(Proxy, self).__init__(**kwargs)
+        self.ip = ip
+        self.port = int(port)
+
+    def __str__(self):
+        return '{0}:{1}'.format(self.ip, self.port)
+
+    def __eq__(self, other):
+        return self.success_rate == other.success_rate
+
+    def __gt__(self, other):
+        return self.success_rate > other.success_rate
+
+    @classmethod
+    def parse(cls, proxy, **kwargs):
+        if proxy.startswith('http'):
+            proxy = re.sub(r'https?://', '', proxy, 1)
+        ip, port = proxy.split(':')
+        return Proxy(ip, port, redis_conn=kwargs.get('redis_conn', None))
+
+
+class ProxyManager(RedisModel):
 
     def __init__(self, **kwargs):
-        if 'redis_conn' in kwargs and kwargs['redis_conn'] is not None:
-            self._redis_conn = kwargs['redis_conn']
-        else:
-            self._redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT,
-                                                 db=config.REDIS_DB, decode_responses=True)
+        super(ProxyManager, self).__init__(**kwargs)
 
     def proxies(self):
         d = self._redis_conn.hgetall("default_proxy_hash")
@@ -140,35 +144,11 @@ class ProxyManager(object):
                 self._redis_conn.hset(pattern, k, max(v, 0))
 
 
-class Pattern(object):
+class Pattern(StatisticsMixin, RedisModel):
 
     def __init__(self, pattern, **kwargs):
+        super(Pattern, self).__init__(**kwargs)
         self.pattern = pattern
-        if 'redis_conn' in kwargs and kwargs['redis_conn'] is not None:
-            self._redis_conn = kwargs['redis_conn']
-        else:
-            self._redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT,
-                                                 db=config.REDIS_DB, decode_responses=True)
-
-    @property
-    def success_rate(self):
-        success_num, total_num = 0, 0
-        for response in self.recent_responses:
-            if response.is_valid:
-                success_num += 1
-            total_num += 1
-        if total_num == 0:
-            return 0
-        success_rate = success_num / total_num
-        return success_rate
-
-    @property
-    def recent_responses(self):
-        key = '_'.join((str(self), 'result'))
-        for info in self._redis_conn.lrange(key, 0, 100):
-            if info is None:
-                continue
-            yield Response(info=info)
 
     @property
     def rule(self):
@@ -178,15 +158,11 @@ class Pattern(object):
         return self.pattern
 
 
-class PatternManager(object):
+class PatternManager(RedisModel):
 
     def __init__(self, **kwargs):
-        if 'redis_conn' in kwargs and kwargs['redis_conn'] is not None:
-            self._redis_conn = kwargs['redis_conn']
-        else:
-            self._redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT,
-                                                 db=config.REDIS_DB, decode_responses=True)
-            self.t = self._init_trie()
+        super(PatternManager, self).__init__(**kwargs)
+        self.t = self._init_trie()
 
     def patterns(self):
         d = self._redis_conn.hgetall('response_check_pattern')
@@ -215,7 +191,6 @@ class CheckPatternTrie(CharTrie):
 
     def __init__(self, *args, **kwargs):
         super(CheckPatternTrie, self).__init__(*args, **kwargs)
-        self._miss_match_counter = Counter()
 
     def __setitem__(self, key, value):
         super(CheckPatternTrie, self).__setitem__(self._remove_http_prefix(key), value)

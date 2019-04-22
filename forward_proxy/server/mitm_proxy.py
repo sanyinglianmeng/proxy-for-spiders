@@ -27,8 +27,8 @@ class Forward(object):
         result = await crawl(url, proxies=proxies, pattern=pattern, data=body, headers=headers, method=method,
                              valid_length=int(valid_length), xpath=xpath, value=value)
         if result is not None:
-            flow.response.text = result.html
-            flow.response.status_code = result.status
+            flow.response.text = result.text
+            flow.response.status_code = result.status_code
         flow.resume()
 
     def response(self, flow):

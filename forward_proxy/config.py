@@ -38,7 +38,7 @@ class Config(object):
 
     NOT_TRUST_404 = {}
 
-    BLACK_KEYWORDS = {'ydstatic', 'nail club', 'forbid', 'identified as anonymous'}
+    GLOBAL_BLACKLIST = {'ydstatic', 'nail club', 'forbid', 'identified as anonymous'}
 
     PATTERN_ENCODING_MAP = {
 
