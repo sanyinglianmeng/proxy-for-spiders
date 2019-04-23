@@ -57,12 +57,12 @@ async def crawl(url, proxies, pattern=None, method='GET', data=None, headers=Non
     encoding = config.PATTERN_ENCODING_MAP.get(pattern)
     async with aiohttp.ClientSession() as session:
         if need_check:
-            tasks = (asyncio.ensure_future(async_crawl_and_check(url, session, pattern, method,
+            tasks = [asyncio.ensure_future(async_crawl_and_check(url, session, pattern, method,
                                                                  proxy, data, headers, encoding,
-                                                                 valid_length, xpath, value)) for proxy in proxies)
+                                                                 valid_length, xpath, value)) for proxy in proxies]
         else:
-            tasks = (asyncio.ensure_future(async_crawl(url, session, method, proxy, data, headers, encoding))
-                     for proxy in proxies)
+            tasks = [asyncio.ensure_future(async_crawl(url, session, method, proxy, data, headers, encoding))
+                     for proxy in proxies]
         for task in asyncio.as_completed(tasks):
             response = await task
             if need_check:

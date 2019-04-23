@@ -25,16 +25,11 @@ class LogHandler(logging.Logger):
         self.level = level
         logging.Logger.__init__(self, self.name, level=level)
         if stream:
-            self.__setStreamHandler__()
+            self._set_stream_handler()
         if file:
-            self.__setFileHandler__()
+            self._set_file_handler()
 
-    def __setFileHandler__(self, level=None):
-        """
-        set file handler
-        :param level:
-        :return:
-        """
+    def _set_file_handler(self, level=None):
         file_name = os.path.join(LOG_PATH, '{name}.log'.format(name=self.name))
         file_handler = logging.handlers.TimedRotatingFileHandler(filename=file_name, when='D', interval=1, backupCount=15)
         file_handler.suffix = '%Y%m%d.log'
@@ -48,12 +43,7 @@ class LogHandler(logging.Logger):
         self.file_handler = file_handler
         self.addHandler(file_handler)
 
-    def __setStreamHandler__(self, level=None):
-        """
-        set stream handler
-        :param level:
-        :return:
-        """
+    def _set_stream_handler(self, level=None):
         stream_handler = logging.StreamHandler()
         formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
         stream_handler.setFormatter(formatter)
@@ -63,12 +53,11 @@ class LogHandler(logging.Logger):
             stream_handler.setLevel(level)
         self.addHandler(stream_handler)
 
-    def resetName(self, name):
-        """
-        reset name
-        :param name:
-        :return:
-        """
+    def reset_name(self, name):
         self.name = name
         self.removeHandler(self.file_handler)
-        self.__setFileHandler__()
+        self._set_file_handler()
+
+
+def decode_all(i):
+    return list(map(bytes.decode, i))
