@@ -18,8 +18,12 @@ async def async_crawl(url, session, method='GET', proxy=None, data=None, headers
         proxy = 'http://' + proxy
     request = session.get if method == 'GET' else session.post
     response = Response()
+    delay = config.LOCAL_REQUEST_DELAY if proxy is None else 0
+    if delay > 0:
+        await asyncio.sleep(delay)
+        logger.info('local fail back request begin sending')
     try:
-        async with request(url, headers=headers, data=data, proxy=proxy, ssl=False, timeout=5) as r:
+        async with request(url, headers=headers, data=data, proxy=proxy, ssl=False, timeout=10) as r:
             if r._body is None:
                 await r.read()
             if encoding is None:
@@ -67,6 +71,9 @@ async def crawl(url, proxies, pattern=None, method='GET', data=None, headers=Non
             response = await task
             if need_check:
                 if response is not None and response.is_valid:
+                    for t in tasks:
+                        if not t.done():
+                            t.cancel()
                     return response
             else:
                 return response

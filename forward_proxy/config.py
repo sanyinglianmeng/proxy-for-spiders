@@ -17,15 +17,16 @@ class Config(object):
     REDIS_PORT = 6379
     REDIS_DB = 0
 
-    CONCURRENT = 3
+    CONCURRENT = 5
     SELECT_STYLE = 'score'
     INIT_SCORE = 3
     FRESH_INTERVAL = 1
     MIN_VALID_LENGTH = 10
     RESULT_SAVE_NUM = 100
+    LOCAL_REQUEST_DELAY = 5
 
     TAG_API_MAP = {
-        'free': 'http://192.168.8.172:8999/get_all/',
+        'free': 'http://127.0.0.1:8889/get_all/',
     }
 
     TAG_PARSE_MAP = {

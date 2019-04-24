@@ -101,7 +101,7 @@ class ProxyManager(RedisModel):
             proxies = self._redis_conn.zrevrange(score_key, 0, 4)
         concurrent_num = min(len(proxies), config.CONCURRENT)
         proxies = [proxies[i] for i in range(concurrent_num)]
-        # proxies.append(None)
+        proxies.append(None)
         return proxies
 
     def _fetch_proxies(self, num, tag='free'):

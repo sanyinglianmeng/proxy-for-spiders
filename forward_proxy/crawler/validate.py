@@ -83,4 +83,5 @@ async def check_response(url, pattern, proxy, status, html, valid_length, xpath,
         await _score_counters(pattern, proxy, is_valid, redis)
     redis.close()
     await redis.wait_closed()
+    logger.info('proxy {} get valid response for url {} {}'.format(proxy, url, is_valid))
     return is_valid
