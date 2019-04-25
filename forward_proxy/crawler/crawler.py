@@ -34,8 +34,8 @@ async def async_crawl(url, session, method='GET', proxy=None, data=None, headers
             response = Response(create_time=int(time.time() * 1000), status_code=r.status, url=url,
                                 text=data, is_valid=False)
     except asyncio.CancelledError:
-        pass
-    except aiohttp.client_exceptions.ClientError:
+        response.is_cancelled = True
+    except aiohttp.ClientError:
         pass
     except asyncio.TimeoutError:
         pass
@@ -48,10 +48,11 @@ async def async_crawl(url, session, method='GET', proxy=None, data=None, headers
 async def async_crawl_and_check(url, session, pattern, method='GET', proxy=None, data=None, headers=None, encoding=None,
                                 valid_length=None, xpath=None, value=None):
     response = await async_crawl(url, session, method, proxy, data, headers, encoding)
-    is_valid = await validate.check_response(url, pattern, proxy, response.status_code, response.text,
-                                             valid_length, xpath, value)
-    if is_valid:
-        response.is_valid = True
+    if not response.is_cancelled:
+        is_valid = await validate.check_response(url, pattern, proxy, response.status_code, response.text,
+                                                 valid_length, xpath, value)
+        if is_valid:
+            response.is_valid = True
     return response
 
 
@@ -70,7 +71,7 @@ async def crawl(url, proxies, pattern=None, method='GET', data=None, headers=Non
         for task in asyncio.as_completed(tasks):
             response = await task
             if need_check:
-                if response is not None and response.is_valid:
+                if response.is_valid:
                     for t in tasks:
                         if not t.done():
                             t.cancel()

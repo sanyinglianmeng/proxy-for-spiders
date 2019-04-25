@@ -20,6 +20,7 @@ class Response(object):
         self.url = url
         self.text = text
         self.create_time = int(str(create_time).split('.')[0]) if create_time else None
+        self.is_cancelled = False
 
     def __str__(self):
         return '{url} {status} {html}'.format(url=self.url, status=self.status_code, html=str(self.text)[:200])
