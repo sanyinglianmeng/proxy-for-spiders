@@ -14,16 +14,15 @@ logger = utils.LogHandler(__name__, file=False)
 
 async def async_crawl(url, session, method='GET', proxy=None, data=None, headers=None, encoding=None):
     url = url.replace('https://', 'http://', 1)
-    if proxy is not None:
+    if proxy is not None and not proxy.startswith('http'):
         proxy = 'http://' + proxy
-    request = session.get if method == 'GET' else session.post
     response = Response()
     try:
         delay = config.LOCAL_REQUEST_DELAY if proxy is None else 0
         if delay > 0:
             await asyncio.sleep(delay)
             logger.info('local fail back request begin sending')
-        async with request(url, headers=headers, data=data, proxy=proxy, ssl=False, timeout=10-delay) as r:
+        async with session.request(method, url, headers=headers, data=data, proxy=proxy, ssl=False, timeout=10-delay) as r:
             if r._body is None:
                 await r.read()
             if encoding is None:
