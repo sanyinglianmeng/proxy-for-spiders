@@ -12,18 +12,24 @@ from config import config
 
 class Response(object):
 
-    def __init__(self, create_time=None, status_code=None, url=None, text=None, is_valid=None, info=None):
+    def __init__(self, create_time=None, status_code=None, url=None, text=None,
+                 is_valid=None, error_info=None, info=None):
         if info is not None:
-            create_time, url, status_code, is_valid, text = info.split('$$', maxsplit=4)
+            create_time, url, status_code, is_valid, text, error_info = info.split('$$', maxsplit=5)
         self.is_valid = ast.literal_eval(str(is_valid))
         self.status_code = status_code
         self.url = url
         self.text = text
         self.create_time = int(str(create_time).split('.')[0]) if create_time else None
         self.is_cancelled = False
+        self.error_info = str(error_info)
 
     def __str__(self):
-        return '{url} {status} {html}'.format(url=self.url, status=self.status_code, html=str(self.text)[:200])
+        return 'url: {url} status_code: {status_code} ' \
+               'error_info: {error_info} html: {html}'.format(url=self.url,
+                                                              status_code=self.status_code,
+                                                              html=str(self.text)[:200],
+                                                              error_info=self.error_info)
 
 
 class RedisModel(object):

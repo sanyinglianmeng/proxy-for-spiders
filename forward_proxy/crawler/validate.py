@@ -47,9 +47,9 @@ def _html_checker(html, valid_length, xpath, value):
         return _xpath_checker(html, xpath, value)
 
 
-async def _result_saver(key, url, status, html, is_valid, redis):
+async def _result_saver(key, url, status, html, is_valid, error_info, redis):
     result_key = '_'.join((key, 'result',))
-    value = "$$".join((str(time.time() * 1000), url, str(status), str(is_valid), str(html)))
+    value = "$$".join((str(time.time() * 1000), url, str(status), str(is_valid), str(html), error_info))
     await redis.lpush(result_key, value)
     await redis.ltrim(result_key, 0, config.RESULT_SAVE_NUM)
 
@@ -74,12 +74,12 @@ async def _score_counters(pattern, proxy, is_valid, redis):
                     await redis.hincrby('default_proxy_hash', proxy, -1)
 
 
-async def check_response(url, pattern, proxy, status, html, valid_length, xpath, value):
+async def check_response(url, pattern, proxy, status, html, valid_length, xpath, value, error_info):
     redis = await aioredis.create_redis(config.REDIS_ADDRESS)
     is_valid = all((_status_checker(pattern, status), _html_checker(html, valid_length, xpath, value),))
     if proxy is not None:
-        await _result_saver(proxy, url, status, html, is_valid, redis)
-        await _result_saver(pattern, url, status, html, is_valid, redis)
+        await _result_saver(proxy, url, status, html, is_valid, error_info, redis)
+        await _result_saver(pattern, url, status, html, is_valid, error_info, redis)
         await _score_counters(pattern, proxy, is_valid, redis)
     redis.close()
     await redis.wait_closed()

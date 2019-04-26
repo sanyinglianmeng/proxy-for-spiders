@@ -34,11 +34,12 @@ async def async_crawl(url, session, method='GET', proxy=None, data=None, headers
                                 text=data, is_valid=False)
     except asyncio.CancelledError:
         response.is_cancelled = True
-    except aiohttp.ClientError:
-        pass
-    except asyncio.TimeoutError:
-        pass
+    except aiohttp.ClientError as e:
+        response.error_info = str(e.__class__) + str(e)
+    except asyncio.TimeoutError as e:
+        response.error_info = str(e.__class__) + str(e)
     except Exception as e:
+        response.error_info = str(e.__class__) + str(e)
         logger.warning(e, exc_info=True)
     finally:
         return response
@@ -49,7 +50,7 @@ async def async_crawl_and_check(url, session, pattern, method='GET', proxy=None,
     response = await async_crawl(url, session, method, proxy, data, headers, encoding)
     if not response.is_cancelled:
         is_valid = await validate.check_response(url, pattern, proxy, response.status_code, response.text,
-                                                 valid_length, xpath, value)
+                                                 valid_length, xpath, value, response.error_info)
         if is_valid:
             response.is_valid = True
     return response
