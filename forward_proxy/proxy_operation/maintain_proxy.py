@@ -30,6 +30,7 @@ async def maintain_proxies():
 async def _maintain_proxies_for_pattern(pattern, redis):
     proxies = await redis.hgetall(pattern)
     if len(proxies) <= 100 and pattern != 'default_proxy_hash':
+
         proxy_manager.copy_default_proxy_hash(pattern)
 
     fail_key = '_'.join((pattern, 'fail',))

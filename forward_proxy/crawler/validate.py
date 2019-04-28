@@ -37,8 +37,8 @@ def _html_checker(html, valid_length, xpath, value):
     if html is None or len(html) < valid_length or any((word in html
                                                         for word in config.GLOBAL_BLACKLIST)):
         return False
-    if xpath == 'whitelist' and value not in html:
-        return False
+    if xpath == 'whitelist' and value in html:
+        return True
     elif xpath == 'blacklist' and any((word in html for word in value.split('|'))):
         return False
     elif len(xpath.strip()) == 0 or len(value.strip()) == 0:

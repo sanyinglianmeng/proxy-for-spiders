@@ -147,8 +147,8 @@ class ProxyManager(RedisModel):
     def copy_default_proxy_hash(self, pattern):
         default_proxy_dict = self._redis_conn.hgetall('default_proxy_hash')
         for k, v in default_proxy_dict.items():
-            if self._redis_conn.sismember(pattern + '_fail', k) == 0:
-                self._redis_conn.hset(pattern, k, max(v, 0))
+            if not self._redis_conn.sismember(pattern + '_fail', k):
+                self._redis_conn.hset(pattern, k, max(int(v), 0))
 
 
 class Pattern(StatisticsMixin, RedisModel):

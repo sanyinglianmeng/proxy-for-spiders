@@ -23,7 +23,7 @@ class Config(object):
     FRESH_INTERVAL = 1
     MIN_VALID_LENGTH = 10
     RESULT_SAVE_NUM = 100
-    LOCAL_REQUEST_DELAY = 5
+    LOCAL_REQUEST_DELAY = 3
 
     TAG_API_MAP = {
         'free': 'http://127.0.0.1:8889/get_all/',
@@ -39,7 +39,7 @@ class Config(object):
 
     NOT_TRUST_404 = {}
 
-    GLOBAL_BLACKLIST = {'ydstatic', 'nail club', 'forbid', 'identified as anonymous'}
+    GLOBAL_BLACKLIST = {'ydstatic', 'nail club', 'forbid', 'identified as anonymous', 'weui_input frm_input', '异常访问请求'}
 
     PATTERN_ENCODING_MAP = {
 
