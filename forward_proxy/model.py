@@ -109,7 +109,7 @@ class ProxyManager(RedisModel):
             proxies = self._redis_conn.zrevrange(score_key, 0, 4)
         concurrent_num = min(len(proxies), config.CONCURRENT)
         proxies = [proxies[i] for i in range(concurrent_num)]
-        proxies.append(None)
+        # proxies.append(None)
         return proxies
 
     def _fetch_proxies(self, num, tag='free'):
@@ -148,7 +148,7 @@ class ProxyManager(RedisModel):
     def copy_default_proxy_hash(self, pattern):
         default_proxy_dict = self._redis_conn.hgetall('default_proxy_hash')
         for k, v in default_proxy_dict.items():
-            if not self._redis_conn.sismember(pattern + '_fail', k):
+            if not self._redis_conn.sismember(pattern + '_fail', k) and not self._redis_conn.hexists(pattern, k):
                 self._redis_conn.hset(pattern, k, max(int(v), 0))
 
 

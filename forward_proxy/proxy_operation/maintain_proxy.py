@@ -30,18 +30,17 @@ async def maintain_proxies():
 async def _maintain_proxies_for_pattern(pattern, redis):
     proxies = await redis.hgetall(pattern)
     if len(proxies) <= 100 and pattern != 'default_proxy_hash':
-
         proxy_manager.copy_default_proxy_hash(pattern)
 
     fail_key = '_'.join((pattern, 'fail',))
     if await redis.hlen(pattern) <= 5:
         await redis.delete(fail_key)
 
-    if pattern != 'default_proxy_hash':
-        for proxy, score in proxies.items():
-            if int(score) <= -10:
-                await redis.hdel(pattern, proxy)
-                await redis.sadd(fail_key, proxy)
+    del_threshold = -3 if pattern != 'default_proxy_hash' else -10
+    for proxy, score in proxies.items():
+        if int(score) <= del_threshold:
+            await redis.hdel(pattern, proxy)
+            await redis.sadd(fail_key, proxy)
 
     await _refresh_score_proxies(pattern, redis)
     await _refresh_random_proxies(pattern, redis)

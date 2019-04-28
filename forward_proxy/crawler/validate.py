@@ -63,13 +63,13 @@ async def _score_counters(pattern, proxy, is_valid, redis):
             if v is None or int(v) < 0:
                 await redis.hset(pattern, proxy, 0)
                 await redis.hset('default_proxy_hash', proxy, 0)
-            elif 0 <= int(v) < 10:
+            elif 0 <= int(v) < 3:
                 await redis.hincrby(pattern, proxy, 1)
                 if pattern != 'default_proxy_hash':
                     await redis.hincrby('default_proxy_hash', proxy, 1)
         else:
             if v is not None:
-                await redis.hincrby(pattern, proxy, -1)
+                a = await redis.hincrby(pattern, proxy, -1)
                 if pattern != 'default_proxy_hash':
                     await redis.hincrby('default_proxy_hash', proxy, -1)
 

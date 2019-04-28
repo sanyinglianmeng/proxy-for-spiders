@@ -23,7 +23,7 @@ class Config(object):
     FRESH_INTERVAL = 1
     MIN_VALID_LENGTH = 10
     RESULT_SAVE_NUM = 100
-    LOCAL_REQUEST_DELAY = 3
+    LOCAL_REQUEST_DELAY = 6
 
     TAG_API_MAP = {
         'free': 'http://127.0.0.1:8889/get_all/',
