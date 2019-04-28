@@ -30,8 +30,13 @@ async def async_crawl(url, session, method='GET', proxy=None, data=None, headers
             if encoding.lower() == 'gb2312':
                 encoding = 'gbk'
             data = r._body.decode(encoding, errors='strict')
+            cookie = r.headers.get('Set-Cookie')
+            if cookie is not None:
+                response_headers = {'Set-Cookie': cookie}
+            else:
+                response_headers = None
             response = Response(create_time=int(time.time() * 1000), status_code=r.status, url=url,
-                                text=data, is_valid=False)
+                                text=data, is_valid=False, headers=response_headers)
     except asyncio.CancelledError:
         response.is_cancelled = True
     except aiohttp.ClientError as e:

@@ -43,7 +43,7 @@ async def receive_request(request):
     result = await crawl(url, proxies=proxies, pattern=pattern, data=body, headers=headers, method=method,
                          valid_length=int(valid_length), xpath=xpath, value=value)
     if result and result.status_code and result.text:
-        return web.Response(status=result.status_code, text=result.text)
+        return web.Response(status=result.status_code, text=result.text, headers=result.headers)
     return web.Response(status=417, text="None of proxies' response is valid")
 
 

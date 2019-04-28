@@ -12,7 +12,7 @@ from config import config
 
 class Response(object):
 
-    def __init__(self, create_time=None, status_code=None, url=None, text=None,
+    def __init__(self, create_time=None, status_code=None, url=None, text=None, headers=None,
                  is_valid=None, error_info=None, info=None):
         if info is not None:
             create_time, url, status_code, is_valid, text, error_info = info.split('$$', maxsplit=5)
@@ -23,6 +23,7 @@ class Response(object):
         self.create_time = int(str(create_time).split('.')[0]) if create_time else None
         self.is_cancelled = False
         self.error_info = str(error_info)
+        self.headers = headers
 
     def __str__(self):
         return 'url: {url} status_code: {status_code} ' \
